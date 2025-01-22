@@ -1,7 +1,6 @@
 name: Build OpenWrt
 
 on:
-  # 触发条件：当推送到 main 分支时，或者手动触发时
   push:
     branches:
       - main
@@ -9,14 +8,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # 使用 Ubuntu 环境构建
-
+    runs-on: ubuntu-latest
     steps:
-      # 1. Checkout OpenWrt 仓库
       - name: Checkout OpenWrt
         uses: actions/checkout@v3
 
-      # 2. 安装构建 OpenWrt 所需的依赖
       - name: Install dependencies
         run: |
           sudo apt update
@@ -24,7 +20,6 @@ jobs:
             g++-multilib gettext git libncurses5-dev libssl-dev python3-distutils \
             rsync unzip zlib1g-dev file wget ccache
 
-      # 3. 更新和安装 OpenWrt 的 feeds
       - name: Download OpenWrt Source
         run: |
           git clone --depth=1 https://github.com/openwrt/openwrt.git
@@ -32,20 +27,11 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      # 4. 如果有自定义配置，复制 .config 文件
       - name: Copy custom config
         run: |
           cp .config .config || make defconfig
 
-      # 5. 开始编译 OpenWrt
       - name: Start Build
         run: |
           cd openwrt
           make -j$(nproc) V=s
-
-      # 6. 上传编译结果（Artifacts）
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: openwrt-firmware
-          path: openwrt/bin/
